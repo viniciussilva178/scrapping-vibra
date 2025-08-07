@@ -1,0 +1,21 @@
+scraper-ocr/
+├── cmd/
+│   └── main.go              # Entrada do app
+├── config/
+│   └── config.go            # Leitura de variáveis de ambiente ou config.yaml
+├── internal/
+│   ├── scraper/
+│   │   └── scraper.go       # Lógica para acessar páginas, baixar PDFs
+│   ├── ocr/
+│   │   └── ocr.go           # Lógica de OCR com Tesseract ou outro
+│   ├── db/
+│   │   ├── db.go            # Conexão com o banco
+│   │   └── insert.go        # Funções de insert/select
+│   └── utils/
+│       └── downloader.go    # Funções auxiliares: download de arquivos, etc.
+├── models/
+│   └── document.go          # Structs e DTOs
+├── scripts/
+│   └── init.sql             # Criação de tabelas
+├── go.mod
+└── .env                     # Configurações sensíveis
