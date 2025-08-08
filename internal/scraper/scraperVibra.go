@@ -3,26 +3,24 @@ package scraper
 import (
 	"fmt"
 	"regexp"
-	"scraper/internal/db"
 	"scraper/internal/services"
 	"scraper/models"
 	"strconv"
 	"strings"
-	"time"
+	"sync"
 
 	"github.com/PuerkitoBio/goquery"
 )
 
-var documents []models.Document
+func ScrapeVibra(user, password string) ([]models.Document, error) {
 
-func ScrapeVibra(user, password string) {
+	//  operation := db.NewOperation()
 
-	operation := db.NewOperation()
-
+	// Pegando usuario autenticado
 	authenticatedPage, browser, err := services.AuthenticateVibra(user, password)
 	if err != nil {
-		fmt.Println("Erro ao realizar autenticação no portal Vibra: ", err)
-		return
+		return nil, fmt.Errorf("erro ao realizar autenticação no portal Vibra:%s", err)
+
 	}
 	defer browser.MustClose()
 	defer authenticatedPage.MustClose()
@@ -30,35 +28,20 @@ func ScrapeVibra(user, password string) {
 	// Puxar Html contendo tabela com os dados
 	html, err := authenticatedPage.HTML()
 	if err != nil {
-		fmt.Println("Erro ao obter HTML:", err)
-		return
+		return nil, fmt.Errorf("erro ao obter HTML:%s", err)
+
 	}
 	fmt.Println(html)
-
-	// Extrair URL do PDF do HTML
-	pdfURL := "https://cn.vibraenergia.com.br/cn/comercio/extratodoclientenovo/imprimirLoteExtrato?numeroDocumento=;0092225755-1"
-
-	time.Sleep(20 * time.Second)
-
-	// Gerar nome do arquivo com timestamp
-	timestamp := time.Now().Format("20060102_150405")
-	filename := fmt.Sprintf("vibra_documentos_%s.pdf", timestamp)
-
-	// Fazer download do PDF
-	err = services.DownloadPDF(authenticatedPage, pdfURL, filename)
-	if err != nil {
-		fmt.Printf("Erro ao fazer download do PDF: %v\n", err)
-	} else {
-		fmt.Printf("=== DOWNLOAD CONCLUÍDO: %s ===\n", filename)
-	}
+	authenticatedPage.MustWaitStable().MustElement("#dtListaDocumentos2").MustWaitVisible()
 
 	reader := strings.NewReader(html)
 	doc, err := goquery.NewDocumentFromReader(reader)
 	if err != nil {
-		fmt.Printf("Erro ao percorrer html: %s", err)
-		return
+		return nil, fmt.Errorf("erro ao percorrer html: %s", err)
+
 	}
 
+	var documents []models.Document
 	doc.Find("table#dtListaDocumentos2").Each(func(i int, table *goquery.Selection) {
 		table.Find("tr").Each(func(j int, row *goquery.Selection) {
 
@@ -106,24 +89,36 @@ func ScrapeVibra(user, password string) {
 				} else {
 					document.Total = total
 				}
-				document.Boleto = `https://cn.vibraenergia.com.br/cn/comercio/extratodoclientenovo/imprimirLoteExtrato?numeroDocumento=;` + document.Documento + `-1`
+				document.Boleto = `https://cn.vibraenergia.com.br/cn//comercio/extratodoclientenovo/imprimirLoteExtrato?numeroDocumento=;` + document.Documento + `-1;`
 
 				documents = append(documents, document)
 			}
 		})
 	})
 
-	for _, d := range documents {
+	var wg sync.WaitGroup
+	semaphore := make(chan struct{}, 5) // Limite de 5 Downloads simultaneos
+	for i := range documents {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done() // adquirir slot
+			semaphore <- struct{}{}
+			defer func() { <-semaphore }() // Liberar slot
 
-		message, err := operation.CreateOperationVibra(&d)
-		if err != nil {
-			fmt.Printf("Erro ao salvar documento %s: %v\n", d.Documento, err)
-		} else {
-			fmt.Printf("Documento %s: %s\n", d.Documento, message)
-		}
+			pdfBytes, err := services.DownloadPDF(authenticatedPage, documents[i].Boleto)
+			if err != nil {
+				fmt.Printf("Erro ao fazer donload do PDF para documento %s: %d bytes\n", documents[i].Documento, err)
+				return
+			}
+			documents[i].Conteudo = pdfBytes
+			fmt.Printf("PDF baixado para documento:  %v", documents[i])
+		}(i)
 	}
 
+	wg.Wait()
+
 	fmt.Printf("=== PROCESSAMENTO CONCLUÍDO ===\n")
+	return documents, nil
 
 }
 

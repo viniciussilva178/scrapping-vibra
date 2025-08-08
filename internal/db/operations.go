@@ -48,8 +48,8 @@ func (o *Operation) CreateOperationVibra(document *models.Document) (string, err
 	sucessful := "Documento Armazanedo com sucesso no Banco de dados!"
 
 	query, err := o.connection.Prepare("INSERT INTO vibra.documento_abastecimento" +
-		"(codigo_documento,nf_fatura,data_emissao,data_vencimento,valor_documento,valor_juros,valor_multa,valor_deducao,valor_total,linha_digitavel)" +
-		"VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)")
+		"(codigo_documento,nf_fatura,data_emissao,data_vencimento,valor_documento,valor_juros,valor_multa,valor_deducao,valor_total,linha_digitavel, conteudo)" +
+		"VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)")
 	if err != nil {
 		fmt.Println("Erro ao preparar conexão com o banco de dados", err)
 		return "", err
@@ -67,6 +67,7 @@ func (o *Operation) CreateOperationVibra(document *models.Document) (string, err
 		document.Deducoes,
 		document.Total,
 		document.LinhaDigitavel,
+		document.Conteudo,
 	)
 	if err != nil {
 		fmt.Println("Erro ao Executar a query", err)

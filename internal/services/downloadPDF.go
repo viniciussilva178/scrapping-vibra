@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
+	"strings"
 	"time"
 
 	"github.com/go-rod/rod"
 )
 
-func DownloadPDF(page *rod.Page, pdfURL string, filename string) error {
+func DownloadPDF(page *rod.Page, pdfURL string) ([]byte, error) {
 	cookies := page.MustCookies()
 
 	client := &http.Client{
@@ -19,7 +19,7 @@ func DownloadPDF(page *rod.Page, pdfURL string, filename string) error {
 
 	req, err := http.NewRequest("GET", pdfURL, nil)
 	if err != nil {
-		return fmt.Errorf("erro ao criar requisição: %v", err)
+		return nil, fmt.Errorf("erro ao criar requisição: %v", err)
 	}
 
 	for _, cookie := range cookies {
@@ -36,25 +36,27 @@ func DownloadPDF(page *rod.Page, pdfURL string, filename string) error {
 	fmt.Printf("Fazendo download do PDF: %s\n", pdfURL)
 	resp, err := client.Do(req)
 	if err != nil {
-		return fmt.Errorf("erro na requisição HTTP: %v", err)
+		return nil, fmt.Errorf("erro na requisição HTTP: %v", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("erro HTTP: %s", resp.Status)
+		return nil, fmt.Errorf("erro HTTP: %s", resp.Status)
 	}
 
-	file, err := os.Create(filename)
+	if contentType := resp.Header.Get("Content-Type"); !strings.Contains(contentType, "application/pdf") {
+		return nil, fmt.Errorf("conteúdo retornado não é um PDF: %s", contentType)
+	}
+
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return fmt.Errorf("erro ao criar arquivo: %v", err)
-	}
-	defer file.Close()
-
-	bytesWritten, err := io.Copy(file, resp.Body)
-	if err != nil {
-		return fmt.Errorf("erro ao salvar arquivo: %v", err)
+		return nil, fmt.Errorf("erro ao ler o conteúdo do PDF: %v", err)
 	}
 
-	fmt.Printf("PDF salvo com sucesso: %s (%d bytes)\n", filename, bytesWritten)
-	return nil
+	if len(body) < 4 || string(body[:4]) != "%PDF" {
+		return nil, fmt.Errorf("conteúdo baixado não é um PDF válido")
+	}
+
+	fmt.Printf("PDF lido com sucesso: %d bytes\n", len(body))
+	return body, nil
 }

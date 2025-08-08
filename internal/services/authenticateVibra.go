@@ -1,19 +1,15 @@
 package services
 
 import (
-	"time"
-
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/launcher"
 )
 
 func AuthenticateVibra(user, password string) (*rod.Page, *rod.Browser, error) {
-	// Acessar a Pagina
 	l := launcher.New().Headless(true)
 	url := l.MustLaunch()
 
 	browser := rod.New().ControlURL(url).MustConnect()
-	// defer browser.MustClose() // Removido
 
 	page := browser.MustPage("https://cn.vibraenergia.com.br/login/")
 	page.MustWaitLoad()
@@ -30,9 +26,7 @@ func AuthenticateVibra(user, password string) (*rod.Page, *rod.Browser, error) {
 
 	payableButton := page.MustElement(`#menuAcessoRevendedorContasPagar`)
 	payableButton.MustClick()
-	page.MustWaitLoad()
-
-	time.Sleep(20 * time.Second)
+	page.MustWaitStable().MustElement("#dtListaDocumentos2").MustVisible()
 
 	return page, browser, nil
 }
