@@ -1,62 +1,87 @@
+// services/download.go
 package services
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
 	"github.com/go-rod/rod"
 )
 
-func DownloadPDF(page *rod.Page, pdfURL string) ([]byte, error) {
+func DownloadPDFToFile(page *rod.Page, pdfURL string, filePath string) error {
+	pdfURL = strings.TrimSpace(pdfURL)
+	if pdfURL == "" {
+		return fmt.Errorf("pdfURL vazio")
+	}
+	if strings.HasPrefix(pdfURL, "/") {
+		pdfURL = "https://cn.vibraenergia.com.br" + pdfURL
+	}
+
+	if strings.HasPrefix(pdfURL, "blob:") {
+		return fmt.Errorf("pdfURL é um blob URL; é necessário baixar via browser (JS) no contexto da página")
+	}
+
 	cookies := page.MustCookies()
 
 	client := &http.Client{
-		Timeout: 30 * time.Second,
+		Timeout: 120 * time.Second,
 	}
 
 	req, err := http.NewRequest("GET", pdfURL, nil)
 	if err != nil {
-		return nil, fmt.Errorf("erro ao criar requisição: %v", err)
+		return fmt.Errorf("erro ao criar requisição: %v", err)
 	}
 
-	for _, cookie := range cookies {
-		req.AddCookie(&http.Cookie{
-			Name:  cookie.Name,
-			Value: cookie.Value,
-		})
+	for _, c := range cookies {
+		if c.Domain == "" || strings.Contains(c.Domain, "vibraenergia") {
+			req.AddCookie(&http.Cookie{
+				Name:  c.Name,
+				Value: c.Value,
+				Path:  c.Path,
+			})
+		}
 	}
 
-	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36")
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116 Safari/537.36")
 	req.Header.Set("Accept", "application/pdf,application/octet-stream,*/*")
-	req.Header.Set("Referer", "https://cn.vibraenergia.com.br/")
+	req.Header.Set("Accept-Language", "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7")
+	req.Header.Set("Referer", "https://cn.vibraenergia.com.br/cn/comercio/extratodoclientenovo/")
 
-	fmt.Printf("Fazendo download do PDF: %s\n", pdfURL)
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("erro na requisição HTTP: %v", err)
+		return fmt.Errorf("erro na requisição HTTP: %v", err)
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("erro HTTP: %s", resp.Status)
-	}
+	fmt.Printf("DownloadPDFToFile: status=%s content-type=%s\n", resp.Status, resp.Header.Get("Content-Type"))
 
-	if contentType := resp.Header.Get("Content-Type"); !strings.Contains(contentType, "application/pdf") {
-		return nil, fmt.Errorf("conteúdo retornado não é um PDF: %s", contentType)
-	}
-
-	body, err := io.ReadAll(resp.Body)
+	out, err := os.Create(filePath)
 	if err != nil {
-		return nil, fmt.Errorf("erro ao ler o conteúdo do PDF: %v", err)
+		return fmt.Errorf("erro ao criar arquivo PDF: %v", err)
+	}
+	defer out.Close()
+
+	br := bufio.NewReader(resp.Body)
+	peek, _ := br.Peek(4)
+
+	_, err = io.Copy(out, br)
+	if err != nil {
+		return fmt.Errorf("erro ao salvar PDF no disco: %v", err)
 	}
 
-	if len(body) < 4 || string(body[:4]) != "%PDF" {
-		return nil, fmt.Errorf("conteúdo baixado não é um PDF válido")
+	// Verifica header mágico
+	if len(peek) < 4 || string(peek) != "%PDF" {
+		debugPath := filePath + ".debug.html"
+		_ = os.Rename(filePath, debugPath)
+		return fmt.Errorf("conteúdo retornado não é um PDF (status=%s content-type=%s). salvo: %s",
+			resp.Status, resp.Header.Get("Content-Type"), debugPath)
 	}
 
-	fmt.Printf("PDF lido com sucesso: %d bytes\n", len(body))
-	return body, nil
+	fmt.Printf("PDF salvo com sucesso: %s\n", filePath)
+	return nil
 }

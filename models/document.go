@@ -11,6 +11,6 @@ type Document struct {
 	Deducoes       float64 `json:"valor_deducao"`
 	Total          float64 `json:"valor_total"`
 	LinhaDigitavel string  `json:"linha_digitavel"`
-	Boleto         string  `json:"boleto_url"`
+	BoletoURL      string  `json:"boleto_url"`
 	Conteudo       []byte  `json:"conteudo"` // Campo para armazenar os dados do PDF
 }

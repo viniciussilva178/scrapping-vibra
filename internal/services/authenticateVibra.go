@@ -24,6 +24,9 @@ func AuthenticateVibra(user, password string) (*rod.Page, *rod.Browser, error) {
 	submitButton.MustClick()
 	page.MustWaitLoad()
 
+	page.MustHandleDialog()
+	page.MustHandleDialog()
+
 	payableButton := page.MustElement(`#menuAcessoRevendedorContasPagar`)
 	payableButton.MustClick()
 	page.MustWaitStable().MustElement("#dtListaDocumentos2").MustVisible()
