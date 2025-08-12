@@ -1,4 +1,4 @@
-package services
+package pkg
 
 import (
 	"github.com/go-rod/rod"
@@ -6,7 +6,7 @@ import (
 )
 
 func AuthenticateVibra(user, password string) (*rod.Page, *rod.Browser, error) {
-	l := launcher.New().Headless(true)
+	l := launcher.New().Headless(false)
 	url := l.MustLaunch()
 
 	browser := rod.New().ControlURL(url).MustConnect()

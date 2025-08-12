@@ -1,5 +1,4 @@
-// services/download.go
-package services
+package utils
 
 import (
 	"bufio"
@@ -13,7 +12,7 @@ import (
 	"github.com/go-rod/rod"
 )
 
-func DownloadPDFToFile(page *rod.Page, pdfURL string, filePath string) error {
+func DownloadPDFToFile(page *rod.Page, pdfURL, filePath, referer string) error {
 	pdfURL = strings.TrimSpace(pdfURL)
 	if pdfURL == "" {
 		return fmt.Errorf("pdfURL vazio")
@@ -50,7 +49,7 @@ func DownloadPDFToFile(page *rod.Page, pdfURL string, filePath string) error {
 	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116 Safari/537.36")
 	req.Header.Set("Accept", "application/pdf,application/octet-stream,*/*")
 	req.Header.Set("Accept-Language", "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7")
-	req.Header.Set("Referer", "https://cn.vibraenergia.com.br/cn/comercio/extratodoclientenovo/")
+	req.Header.Set("Referer", referer)
 
 	resp, err := client.Do(req)
 	if err != nil {

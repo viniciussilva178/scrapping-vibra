@@ -1,6 +1,6 @@
 package models
 
-type Document struct {
+type NewDocuments struct {
 	Documento      string  `json:"codigo_documento"`
 	NF             string  `json:"nf_fatura"`
 	Emissao        string  `json:"data_emissao"`
@@ -11,7 +11,7 @@ type Document struct {
 	Deducoes       float64 `json:"valor_deducao"`
 	Total          float64 `json:"valor_total"`
 	LinhaDigitavel string  `json:"linha_digitavel"`
-	BoletoURL      string  `json:"boleto_url"`
-	Conteudo       []byte  `json:"conteudo"` // Campo para armazenar os dados do PDF
-	NFConteudo     []byte  `json:"nf_conteudo"`
+	BoletosId      string  `json:"documentos_id"`
+	XMLId          string  `json:"xml_id"`
+	NF_id          string  `json:"nfe_id"`
 }

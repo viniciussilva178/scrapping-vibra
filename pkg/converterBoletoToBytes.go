@@ -1,4 +1,4 @@
-package services
+package pkg
 
 import (
 	"fmt"
@@ -7,8 +7,8 @@ import (
 	"scraper/models"
 )
 
-func ConvertBoletoToBytes(document *models.Document, increment string) ([]byte, error) {
-	files, err := filepath.Glob("./docs/boletos_" + increment + ".pdf")
+func ConvertBoletoToBytes(document *models.Document, increment, path string) ([]byte, error) {
+	files, err := filepath.Glob(path + increment + ".pdf")
 	if err != nil {
 		return nil, fmt.Errorf("erro ao buscar arquivos: %w", err)
 	}
