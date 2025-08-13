@@ -4,16 +4,18 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"os"
 
 	_ "github.com/lib/pq"
 )
 
 func DBConnect() (*sql.DB, error) {
-	host := "brapoio-dev.internal"
-	port := "5432"
-	user := "brapoio_vinicius"
-	password := "ckt9tqu.rnb7yxu3XQB"
-	dbName := "brapoio_db"
+
+	host := os.Getenv("HOST_DB")
+	port := os.Getenv("PORT_DB")
+	user := os.Getenv("USER_DB")
+	password := os.Getenv("PASSWORD_DB")
+	dbName := os.Getenv("DB_NAME")
 
 	psqlInfo := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		host, port, user, password, dbName)
