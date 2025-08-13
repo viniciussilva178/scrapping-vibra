@@ -11,24 +11,23 @@
 
 ## Scrapping  NF-E
 [x] - Entrar no portal (NF-E)
-[] - Preencher (Emissao, ate, filial) e pesquisar
-[] - Download de NFE
-[] - Converter em []byte
-[] - Armazenar Nota em "Files"
-[] - Armazenar o XML da nota.
-[] - Ler XML da nota fiscal. 
-[] - Adicionar campos de CNPJ Emissor, CNPJ Destino
+[x] - Preencher (Emissao, ate, filial) e pesquisar
+[x] - Download de NFE
+[x] - Converter em []byte
+[x] - Armazenar Nota em "Files"
+[]x - Armazenar o XML da nota.
+[x] - Ler XML da nota fiscal. 
+[x] - Adicionar campos de CNPJ Emissor, CNPJ Destino
 
 
 ## Otimizações
-[] - Implementar Retry nas funcionalidades
-[] - Atribuir Timeout
-[] - Verificar se existe um modal aberto após o login
+[x] - Implementar Retry nas funcionalidades
+[x] - Atribuir Timeout
+[x] - Verificar se existe um modal aberto após o login
 [x] - Refatorar o Código
-[] - Implementar Teste automatizado para as tarefas
-[] - Corrigir Bugs na atribuição dos Boletos e Linhas digitáveis
-[] - Separar Tabelas para armazenar documentos e referencia-las com um seu ID na tabela de  vibra.documento_abastecimento;
+[x] - Implementar Teste automatizado para as tarefas
+[x] - Corrigir Bugs na atribuição dos Boletos e Linhas digitáveis
+[x] - Separar Tabelas para armazenar documentos e referencia-las com um seu ID na tabela de  vibra.documento_abastecimento;
 [] - Tirar pontos e espaços da Linhadigitavel, CNPJ e demais dados... 
-
 
 

@@ -7,7 +7,7 @@ import (
 	"scraper/models"
 )
 
-func ConvertBoletoToBytes(document *models.Document, increment, path string) ([]byte, error) {
+func ConvertPDFToBytes(document *models.Document, increment, path string) ([]byte, error) {
 	files, err := filepath.Glob(path + increment + ".pdf")
 	if err != nil {
 		return nil, fmt.Errorf("erro ao buscar arquivos: %w", err)
@@ -24,7 +24,7 @@ func ConvertBoletoToBytes(document *models.Document, increment, path string) ([]
 		return nil, fmt.Errorf("erro ao ler arquivo %s: %w", file, err)
 	}
 
-	document.Conteudo = data
+	document.ConteudoDocumento = data
 	fmt.Printf("Arquivo %s convertido em %d bytes\n", filepath.Base(file), len(data))
 
 	return data, nil

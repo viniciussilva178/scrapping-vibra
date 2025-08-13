@@ -1,4 +1,4 @@
-package utils
+package pkg
 
 import (
 	"fmt"
@@ -25,9 +25,11 @@ func GetBarcodeFromFile(caminho string, pageNum int) (string, error) {
 
 	re := regexp.MustCompile(`\d{5}\.\d{5}\s\d{5}\.\d{6}\s\d{5}\.\d{6}\s\d\s\d{14}`)
 	codigo := re.FindString(text)
+
+	cleanLinhaDigitavel := CleanCNPJ(codigo)
 	if codigo == "" {
 		return "", fmt.Errorf("nenhuma linha digitável encontrada na página %d", pageNum)
 	}
 
-	return codigo, nil
+	return cleanLinhaDigitavel, nil
 }

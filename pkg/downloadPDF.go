@@ -1,4 +1,4 @@
-package utils
+package pkg
 
 import (
 	"bufio"
@@ -28,7 +28,7 @@ func DownloadPDFToFile(page *rod.Page, pdfURL, filePath, referer string) error {
 	cookies := page.MustCookies()
 
 	client := &http.Client{
-		Timeout: 120 * time.Second,
+		Timeout: 300 * time.Second,
 	}
 
 	req, err := http.NewRequest("GET", pdfURL, nil)
