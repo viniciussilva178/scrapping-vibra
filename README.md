@@ -1,5 +1,4 @@
 ## Otimizações essênciais
-
 [] - Update do documento da nota fiscal
 [] - Update do CNPJ de origem e do CNPJ destino
 

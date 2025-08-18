@@ -7,7 +7,7 @@ import (
 	"github.com/ledongthuc/pdf"
 )
 
-func GetBarcodeFromFile(caminho string, pageNum int) (string, error) {
+func ExtractNumSerie(caminho string, pageNum int) (string, error) {
 	f, r, err := pdf.Open(caminho)
 	if err != nil {
 		return "", fmt.Errorf("erro ao abrir PDF: %w", err)
@@ -23,7 +23,7 @@ func GetBarcodeFromFile(caminho string, pageNum int) (string, error) {
 		return "", fmt.Errorf("erro ao extrair texto da página %d: %w", pageNum, err)
 	}
 
-	re := regexp.MustCompile(`\d{5}\.\d{5}\s\d{5}\.\d{6}\s\d{5}\.\d{6}\s\d\s\d{14}`)
+	re := regexp.MustCompile(``)
 	codigo := re.FindString(text)
 
 	cleanLinhaDigitavel := CleanCNPJ(codigo)

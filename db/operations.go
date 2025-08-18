@@ -109,6 +109,7 @@ func (o *Operation) CreateOperationVibraDocumento(documento *models.Document, ti
 	if err != nil {
 		fmt.Println("Erro ao preparar a requisicao")
 	}
+	defer query.Close()
 
 	err = query.QueryRow(tipo, documento.ConteudoDocumento).Scan(&id)
 	if err != nil {
@@ -116,4 +117,31 @@ func (o *Operation) CreateOperationVibraDocumento(documento *models.Document, ti
 	}
 
 	return id, nil
+}
+
+func (o *Operation) UpdateOperationVibraWithNF(numero_fatura string, idNF int) (string, int, error) {
+
+	if o.connection == nil {
+		return "", 0, fmt.Errorf("conexão com o banco de dados não está disponível")
+	}
+
+	var id int
+	query, err := o.connection.Prepare(`
+        UPDATE vibra.conta_pagar
+		SET id_nota_fiscal = $1
+		WHERE numero_fatura = $2
+		RETURNING id_conta_pagar;
+	`)
+	if err != nil {
+		fmt.Println("Erro ao atualizar conta a pagar", err)
+	}
+	defer query.Close()
+
+	query.QueryRow(
+		idNF,
+		numero_fatura,
+	).Scan(&id)
+
+	return numero_fatura, id, nil
+
 }

@@ -28,6 +28,18 @@ func ProcessarBoleto(conta *models.ContasAPagar, increment string, op *db.Operat
 		conta.LinhaDigitavel = code
 	}
 
+	cnpj, err := pkg.GetCNPJS(boletoPath, 1)
+
+	if err != nil {
+		log.Printf("Aviso: linha digitável não encontrada: %v", err)
+	} else {
+		formattedBeneficiario := pkg.CleanCNPJ(cnpj[0])
+		formattedPagador := pkg.CleanCNPJ(cnpj[2])
+
+		conta.CNPJBeneficiario = formattedBeneficiario
+		conta.CNPJPagador = formattedPagador
+	}
+
 	// Salvar documento no banco
 	docBoleto := models.Document{
 		Tipo:              1,

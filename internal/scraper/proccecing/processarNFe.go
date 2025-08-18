@@ -4,14 +4,18 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"scraper/db"
 	"scraper/models"
 	"scraper/pkg"
+	"time"
 
 	"github.com/go-rod/rod"
 )
 
-func ProcessarNFe(page *rod.Page, increment string, op *db.Operation) (int, error) {
+func ProcessarNFe(page *rod.Page, increment string, op *db.Operation) (int, string, error) {
+	nfePath := filepath.Join("./", "nfe_"+increment+".pdf")
+
 	// Construir URL da NFe
 	pdfURL := "https://cn.vibraenergia.com.br/cn/comercio/notafiscaleletronicanova/downloadNotaFiscal?tipoArquivo=pdf&idLinha=" +
 		increment + "&tipoDocumento=danfe"
@@ -33,15 +37,15 @@ func ProcessarNFe(page *rod.Page, increment string, op *db.Operation) (int, erro
 
 	// Baixar NFe
 	fileName := "nfe_" + increment + ".pdf"
-	err = pkg.DownloadPDFToFile(page, pdfURL, fileName, page.MustInfo().URL)
+	err = pkg.DownloadPDFToFile(page, pdfURL, fileName, "https://cn.vibraenergia.com.br/cn/comercio/notafiscaleletronicanova/")
 	if err != nil {
-		return 0, fmt.Errorf("erro ao baixar NFe: %v", err)
+		return 0, "", fmt.Errorf("erro ao baixar NFe: %v", err)
 	}
 
 	// Ler NFe como bytes
 	data, err := os.ReadFile(fileName)
 	if err != nil {
-		return 0, fmt.Errorf("erro ao ler NFe: %v", err)
+		return 0, "", fmt.Errorf("erro ao ler NFe: %v", err)
 	}
 
 	// Salvar documento no banco
@@ -49,9 +53,17 @@ func ProcessarNFe(page *rod.Page, increment string, op *db.Operation) (int, erro
 		Tipo:              2,
 		ConteudoDocumento: data,
 	}, 2)
+	if err != nil {
+		fmt.Println("Erro ao salvar documento", err)
+	}
+
+	numeroFatura, err := pkg.GetNumeroFatura(nfePath, 1)
+	if err != nil {
+		fmt.Println("erro ao pegar numero da Fatura da Nota fiscal")
+	}
 
 	// Limpeza do arquivo temporário
-	defer os.Remove(fileName)
 
-	return id, err
+	page.Timeout(120 * time.Second)
+	return id, numeroFatura, err
 }

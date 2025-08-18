@@ -25,13 +25,13 @@ func ProcessarContas(doc *goquery.Document, page *rod.Page, op *db.Operation) ([
 		page.MustWaitStable().MustElement("#downloadNotaFiscalForm").MustWaitVisible()
 
 		// Configurar filtro por data
-		dataOntem := time.Now().AddDate(0, 0, -1).Format("02/01/2006")
+		dataOntem := time.Now().AddDate(0, 0, -3).Format("02/01/2006")
 		page.MustEval(`date => {
-			const el = document.querySelector('#dataEmissaoInicial');
-			el.value = date;
-			el.dispatchEvent(new Event('input', { bubbles: true }));
-			el.dispatchEvent(new Event('change', { bubbles: true }));
-		}`, dataOntem)
+				const el = document.querySelector('#dataEmissaoInicial');
+				el.value = date;
+				el.dispatchEvent(new Event('input', { bubbles: true }));
+				el.dispatchEvent(new Event('change', { bubbles: true }));
+			}`, dataOntem)
 
 		page.MustElement(`#btListar`).MustClick()
 		page.MustWaitStable().MustElement(`#panelNotaFiscal`).MustWaitVisible()
@@ -80,26 +80,31 @@ func ProcessarContas(doc *goquery.Document, page *rod.Page, op *db.Operation) ([
 			conta.ValorTotal = total
 		}
 
-		// Processar boleto
 		if err := ProcessarBoleto(&conta, increment, op); err != nil {
 			log.Printf("Erro no boleto linha %d: %v", idx+1, err)
 			return
 		}
 
-		// Processar NFe
-		if idNF, err := ProcessarNFe(page, increment, op); err == nil {
-			conta.IDNotaFiscal = &idNF
-		} else {
-			log.Printf("NF-e falhou linha %d: %v", idx+1, err)
+		conta.IDXML = nil
 
-		}
+		// Processar boleto
+		/*
 
-		// Processar XML
-		if idXML, err := ProcessarXML(page, increment, op); err == nil {
-			conta.IDXML = &idXML
-		} else {
-			log.Printf("XML falhou linha %d: %v", idx+1, err)
-		}
+			// Processar NFe
+			if idNF, err := ProcessarNFe(page, increment, op); err == nil {
+				conta.IDNotaFiscal = nil
+			} else {
+				log.Printf("NF-e falhou linha %d: %v", idx+1, err)
+
+			}
+
+			// Processar XML
+			if idXML, err := ProcessarXML(page, increment, op); err == nil {
+				conta.IDXML = &idXML
+			} else {
+				log.Printf("XML falhou linha %d: %v", idx+1, err)
+			}
+		*/
 
 		contasPagar = append(contasPagar, conta)
 	})

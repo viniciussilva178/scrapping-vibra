@@ -1,6 +1,8 @@
 package pkg
 
 import (
+	"time"
+
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/launcher"
 )
@@ -30,6 +32,8 @@ func AuthenticateVibra(user, password string) (*rod.Page, *rod.Browser, error) {
 	payableButton := page.MustElement(`#menuAcessoRevendedorContasPagar`)
 	payableButton.MustClick()
 	page.MustWaitStable().MustElement("#dtListaDocumentos2").MustVisible()
+
+	page.Timeout(120 * time.Second)
 
 	return page, browser, nil
 }
