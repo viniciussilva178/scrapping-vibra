@@ -1,11 +1,9 @@
-## Estrutura 
+## Otimizações essênciais
 
-cmd ->> Pasta principal
-db ->> Ligações Banco de Dados
-internal ->> Codigo principal de scrapping
-    Scrapper ->> 
-             processing ( Armazena o processamento de cada documento e do contas a Pagar)
-models ->> Entidades do sitema
-pkg ->> Componentes para acessos externos
-   
+[] - Update do documento da nota fiscal
+[] - Update do CNPJ de origem e do CNPJ destino
+
+## Otimizações NV2
+[] - Testes automatizados (testify)
+
 
