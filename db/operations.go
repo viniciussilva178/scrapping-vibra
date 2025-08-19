@@ -3,6 +3,7 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"scraper/models"
 	"time"
 )
@@ -11,7 +12,7 @@ type Operation struct {
 	connection *sql.DB
 }
 
-func connectionValidation() (*sql.DB, error) {
+func ConnectionValidation() (*sql.DB, error) {
 	conn, err := DBConnect()
 	if err != nil {
 		return nil, err
@@ -21,7 +22,7 @@ func connectionValidation() (*sql.DB, error) {
 }
 
 func NewOperation() Operation {
-	conn, err := connectionValidation()
+	conn, err := ConnectionValidation()
 	if err != nil {
 		fmt.Println("Erro na conexaão com o Banco de dados", err)
 	}
@@ -101,26 +102,40 @@ func (o *Operation) CreateOperationVibraDocumento(documento *models.Document, ti
 	}
 
 	var id int
+	// Verificar se NumeroNFE já existe
+	if documento.NumeroNFE != nil {
+		err := o.connection.QueryRow(`
+			SELECT id_documento_abastecimento
+			FROM vibra.documento_abastecimento
+			WHERE numero_nfe = $1 AND tipo_documento = $2`, *documento.NumeroNFE, tipo).Scan(&id)
+		if err == nil {
+			log.Printf("Documento existente encontrado para NumeroNFE %s: id %d", *documento.NumeroNFE, id)
+			return id, nil
+		} else if err != sql.ErrNoRows {
+			return 0, fmt.Errorf("erro ao verificar documento existente para NumeroNFE %s: %v", *documento.NumeroNFE, err)
+		}
+	}
+
+	// Inserir novo documento
 	query, err := o.connection.Prepare(`
-        INSERT INTO vibra.documento_abastecimento (tipo_documento, conteudo_documento)
-        VALUES ($1, $2)
-        RETURNING id_documento_abastecimento`,
-	)
+		INSERT INTO vibra.documento_abastecimento (tipo_documento, conteudo_documento, numero_nfe)
+		VALUES ($1, $2, $3)
+		RETURNING id_documento_abastecimento`)
 	if err != nil {
-		fmt.Println("Erro ao preparar a requisicao")
+		return 0, fmt.Errorf("erro ao preparar a query de inserção: %v", err)
 	}
 	defer query.Close()
 
-	err = query.QueryRow(tipo, documento.ConteudoDocumento).Scan(&id)
+	err = query.QueryRow(tipo, documento.ConteudoDocumento, documento.NumeroNFE).Scan(&id)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("erro ao inserir documento para NumeroNFE %v: %v", documento.NumeroNFE, err)
 	}
 
+	log.Printf("Novo documento inserido para NumeroNFE %v: id %d", documento.NumeroNFE, id)
 	return id, nil
 }
 
 func (o *Operation) UpdateOperationVibraWithNF(numero_fatura string, idNF int) (string, int, error) {
-
 	if o.connection == nil {
 		return "", 0, fmt.Errorf("conexão com o banco de dados não está disponível")
 	}
@@ -133,15 +148,16 @@ func (o *Operation) UpdateOperationVibraWithNF(numero_fatura string, idNF int) (
 		RETURNING id_conta_pagar;
 	`)
 	if err != nil {
-		fmt.Println("Erro ao atualizar conta a pagar", err)
+		return "", 0, fmt.Errorf("erro ao preparar a query de atualização: %v", err)
 	}
 	defer query.Close()
 
-	query.QueryRow(
-		idNF,
-		numero_fatura,
-	).Scan(&id)
+	err = query.QueryRow(idNF, numero_fatura).Scan(&id)
+	if err == sql.ErrNoRows {
+		return "", 0, fmt.Errorf("nenhuma conta encontrada para numero_fatura: %s", numero_fatura)
+	} else if err != nil {
+		return "", 0, fmt.Errorf("erro ao executar a query de atualização para numero_fatura %s: %v", numero_fatura, err)
+	}
 
 	return numero_fatura, id, nil
-
 }

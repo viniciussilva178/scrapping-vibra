@@ -8,7 +8,7 @@ import (
 )
 
 func AuthenticateVibra(user, password string) (*rod.Page, *rod.Browser, error) {
-	l := launcher.New().Headless(false)
+	l := launcher.New().Headless(true)
 	url := l.MustLaunch()
 
 	browser := rod.New().ControlURL(url).MustConnect()

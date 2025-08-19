@@ -42,16 +42,16 @@ func ProcessarBoleto(conta *models.ContasAPagar, increment string, op *db.Operat
 
 	// Salvar documento no banco
 	docBoleto := models.Document{
-		Tipo:              1,
+		Tipo:              2,
 		ConteudoDocumento: data,
 	}
-	idBoleto, err := op.CreateOperationVibraDocumento(&docBoleto, 1)
+	idBoleto, err := op.CreateOperationVibraDocumento(&docBoleto, 2)
 	if err != nil {
 		return fmt.Errorf("erro ao salvar boleto: %v", err)
 	}
 	conta.IDBoleto = &idBoleto
 
-	re := regexp.MustCompile(`\boletos[0-100]\.pdf`)
+	re := regexp.MustCompile(`\boletos_[0-100]\.pdf`)
 
 	defer os.RemoveAll(re.String())
 

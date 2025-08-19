@@ -25,7 +25,7 @@ func ProcessarContas(doc *goquery.Document, page *rod.Page, op *db.Operation) ([
 		page.MustWaitStable().MustElement("#downloadNotaFiscalForm").MustWaitVisible()
 
 		// Configurar filtro por data
-		dataOntem := time.Now().AddDate(0, 0, -3).Format("02/01/2006")
+		dataOntem := time.Now().AddDate(0, 0, -1).Format("02/01/2006")
 		page.MustEval(`date => {
 				const el = document.querySelector('#dataEmissaoInicial');
 				el.value = date;
