@@ -107,7 +107,7 @@ func (o *Operation) GetConteudoDocumento() ([]byte, int, int8, error) {
 	}
 	defer query.Close()
 
-	err = query.QueryRow().Scan(&conteudoDocumento)
+	err = query.QueryRow().Scan(&conteudoDocumento, &tipoDocumento)
 	if err != nil {
 		return nil, 0, 0, err
 	}
@@ -116,6 +116,7 @@ func (o *Operation) GetConteudoDocumento() ([]byte, int, int8, error) {
 
 	fmt.Printf("O Nome do documento é: %s", conteudoDocumento)
 	fmt.Printf("E o tamanho é: %v", lengthConteudo)
+	fmt.Printf("O Tipo de documento é: %v", tipoDocumento)
 
 	return conteudoDocumento, lengthConteudo, tipoDocumento, nil
 }

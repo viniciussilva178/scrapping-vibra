@@ -3,6 +3,7 @@ package scraper
 import (
 	"fmt"
 	"log"
+	"os"
 	"scraper/db"
 	scraper "scraper/internal/scraper/proccecing"
 	"strconv"
@@ -22,7 +23,7 @@ func ExecuteScrapper() {
 	for i, cred := range credentials {
 		fmt.Printf("\n=== PROCESSANDO USUÁRIO %d: %s ===\n", i+1, cred.User)
 
-		contasPagar, page, browser, err := ScrapeDocsVibra(cred.User, cred.Password, &operation)
+		contasPagar, page, browser, err := scraper.ScrapeDocsVibra(cred.User, cred.Password, &operation)
 		if err != nil {
 
 			if page != nil {
@@ -45,7 +46,7 @@ func ExecuteScrapper() {
 		}
 
 		for idx, conta := range contasPagar {
-			increment := strconv.Itoa(idx + 1)
+			increment := strconv.Itoa(idx)
 			idNF, numeroFatura, err := scraper.ProcessarNFe(page, increment, conta.NumeroFatura, &operation)
 			if err != nil {
 				log.Printf("Erro ao processar NF linha %d: %v", idx+1, err)
@@ -58,7 +59,7 @@ func ExecuteScrapper() {
 				log.Printf("Conta linha %d atualizada com NF %s (id %d)", idx+1, numeroFatura, idNF)
 			}
 		}
-		// defer os.Remove("*.pdf")
+		defer os.Remove("boletos.pdf")
 		fim := time.Now()
 		duracao := fim.Sub(inicio)
 

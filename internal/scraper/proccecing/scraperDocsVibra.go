@@ -3,8 +3,7 @@ package scraper
 import (
 	"fmt"
 	"scraper/db"
-
-	scraper "scraper/internal/scraper/proccecing"
+	scrapperAuth "scraper/internal/auth"
 	util "scraper/internal/utils"
 	"scraper/models"
 	"scraper/pkg"
@@ -20,7 +19,7 @@ func ScrapeDocsVibra(user, password string, op *db.Operation) ([]models.ContasAP
 	inicio := time.Now()
 
 	// 1. Autenticação
-	authenticatedPage, browser, err := pkg.AuthenticateVibra(user, password)
+	authenticatedPage, browser, err := scrapperAuth.AuthenticateVibra(user, password)
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("erro ao realizar autenticação: %v", err)
 	}
@@ -70,7 +69,7 @@ func ScrapeDocsVibra(user, password string, op *db.Operation) ([]models.ContasAP
 	}
 
 	// 6. Processar contas
-	contasPagar, err := scraper.ProcessarContas(doc, authenticatedPage, op)
+	contasPagar, err := ProcessarContas(doc, authenticatedPage, op)
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("erro ao processar contas: %v", err)
 	}

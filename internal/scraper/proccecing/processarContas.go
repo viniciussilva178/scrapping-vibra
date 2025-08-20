@@ -48,7 +48,7 @@ func ProcessarContas(doc *goquery.Document, page *rod.Page, op *db.Operation) ([
 		}
 
 		conta := models.ContasAPagar{}
-		increment := strconv.Itoa(idx + 1)
+		increment := strconv.Itoa(idx)
 
 		// Extração de dados
 		conta.CNPJBeneficiario = pkg.CleanCNPJ(strings.TrimSpace(cells.Eq(10).Text()))
